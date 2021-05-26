@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
-from Tabular.Agents import MonteCarloAgent
+from tabular.Agents import MonteCarloAgent
 from utils import evaluate
 from environments import AuctionEnvV0
 

@@ -5,7 +5,7 @@ from tqdm import tqdm
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 
-from ApproximateMethods.PolicyGradientAgents import Reinforce
+from approximate_methods.policy_gradient import Reinforce
 from environments import AuctionEnv
 from scipy import stats
 

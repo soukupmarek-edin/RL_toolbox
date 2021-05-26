@@ -14,13 +14,6 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 class Agent(ABC):
     """
-    :attr action_space (gym.Space): action space of used environment
-    :attr observation_space (gym.Space): observation space of used environment
-    :attr saveables (Dict[str, torch.nn.Module]):
-        mapping from network names to PyTorch network modules
-
-    Note:
-        see http://gym.openai.com/docs/#spaces for more information on Gym spaces
     """
 
     def __init__(self, action_space: gym.Space, observation_space: gym.Space):
@@ -32,45 +25,13 @@ class Agent(ABC):
         self.action_space = action_space
         self.observation_space = observation_space
 
-        self.saveables = {}
-
-    def save(self, path: str, suffix: str = "") -> str:
-        """Saves saveable PyTorch models under given path
-
-        The models will be saved in directory found under given path in file "models_{suffix}.pt"
-        where suffix is given by the optional parameter (by default empty string "")
-
-        :param path (str): path to directory where to save models
-        :param suffix (str, optional): suffix given to models file
-        :return (str): path to file of saved models file
-        """
-        torch.save(self.saveables, path)
-        return path
-
-    def restore(self, save_path: str):
-        """Restores PyTorch models from models file given by path
-
-        :param save_path (str): path to file containing saved models
-        """
-        dirname, _ = os.path.split(os.path.abspath(__file__))
-        save_path = os.path.join(dirname, save_path)
-        checkpoint = torch.load(save_path)
-        for k, v in self.saveables.items():
-            v.load_state_dict(checkpoint[k].state_dict())
-
     @abstractmethod
     def act(self, obs: np.ndarray):
         ...
 
     @abstractmethod
-    def schedule_hyperparameters(self, timestep: int, max_timestep: int):
+    def schedule_hyperparameters(self, **kwargs):
         """Updates the hyperparameters
-
-        This function is called before every episode and allows you to schedule your
-        hyperparameters.
-
-        :param timestep (int): current timestep at the beginning of the episode
-        :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ...
 
@@ -210,12 +171,6 @@ class Reinforce(Agent):
 
 
 class GaussianReinforce(Agent):
-    """
-    :attr policy (FCNetwork): fully connected actor network for policy
-    :attr policy_optim (torch.optim): PyTorch optimiser for actor network
-    :attr learning_rate (float): learning rate for DQN optimisation
-    :attr gamma (float): discount rate gamma
-    """
 
     def __init__(self, action_space: gym.Space, obs_space: gym.Space, d_features,
                  alpha: float, gamma: float, epsilon: float, sigma=1):
@@ -266,8 +221,6 @@ class GaussianReinforce(Agent):
 
     def update(self, rewards: List[float], obses: List[np.ndarray], actions: List[int]) -> Dict[str, float]:
         """Update function for policy gradients
-
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q3**
 
         :param rewards: rewards of episode (from first to last)
         :param obses: observations of episode (from first to last)
