@@ -1,5 +1,5 @@
 import gym
-from tabular.Agents import QLearningAgent, SarsaAgent
+from tabular.agents import QLearningAgent, SarsaAgent
 from utils import evaluate, DiscreteDistribution, ContinuousDistribution
 import environments as my_envs
 from scipy import stats
