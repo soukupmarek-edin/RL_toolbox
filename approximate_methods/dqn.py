@@ -8,76 +8,7 @@ from torch.optim import Adam
 from typing import Iterable
 from copy import deepcopy
 from collections import namedtuple
-
-
-class FCLinearNetwork(nn.Module):
-
-    def __init__(self, dims, output_activation=None):
-        super().__init__()
-        self.input_size = dims[0]
-        self.output_size = dims[-1]
-        self.layers = self.make_seq(dims, output_activation)
-
-    @staticmethod
-    def make_seq(dims, output_activation):
-        mods = []
-
-        for i in range(len(dims) - 2):
-            mods.append(nn.Linear(dims[i], dims[i + 1]))
-            mods.append(nn.ReLU())
-        mods.append(nn.ReLU())
-
-        mods.append(nn.Linear(dims[-2], dims[-1]))
-        if output_activation:
-            mods.append(output_activation())
-        return nn.Sequential(*mods)
-
-    def forward(self, x):
-        return self.layers(x)
-
-    def hard_update(self, source):
-        for target_param, source_param in zip(self.parameters(), source.parameters()):
-            target_param.data.copy_(source_param.data)
-
-    def soft_param(self, source, tau):
-        for target_param, source_param in zip(self.parameters(), source.parameters()):
-            target_param.data.copy_((1 - tau) * source_param.data + tau * source_param.data)
-
-
-Transition = namedtuple("Transition", ("states", "actions", "next_states", "rewards", "done"))
-
-
-class ReplayBuffer:
-
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.memory = None
-        self.writes = 0
-
-    def init_memory(self, transition):
-        for t in transition:
-            assert t.ndim == 1
-
-        self.memory = Transition(*[np.zeros([self.capacity, t.size], dtype=t.dtype) for t in transition])
-
-    def push(self, *args):
-        if not self.memory:
-            self.init_memory(Transition(*args))
-
-        position = (self.writes) % self.capacity
-        for i, data in enumerate(args):
-            self.memory[i][position, :] = data
-
-        self.writes += 1
-
-    def sample(self, batch_size, device="cpu"):
-        samples = np.random.randint(0, high=len(self), size=batch_size)
-        batch = Transition(*[torch.from_numpy(np.take(d, samples, axis=0)).to(device) for d in self.memory])
-
-        return batch
-
-    def __len__(self):
-        return min(self.writes, self.capacity)
+from utils.networks import FCNetwork
 
 
 class DQN:
@@ -90,7 +21,7 @@ class DQN:
         ACTION_SIZE = action_space.n
         STATE_SIZE = observation_space.shape[0]
 
-        self.online_net = FCLinearNetwork((STATE_SIZE, *hidden_size, ACTION_SIZE), output_activation=None)
+        self.online_net = FCNetwork((STATE_SIZE, *hidden_size, ACTION_SIZE), output_activation=None)
         self.target_net = deepcopy(self.online_net)
         self.optimizer = Adam(self.online_net.parameters(), lr=learning_rate, eps=1e-3)
         self.loss_fn = nn.MSELoss()

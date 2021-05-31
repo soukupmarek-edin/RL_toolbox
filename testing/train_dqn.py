@@ -1,6 +1,7 @@
 import gym
 import numpy as np
-from approximate_methods.dqn import DQN, ReplayBuffer
+from approximate_methods.dqn import DQN
+from utils.experience_replay import ReplayBuffer
 import matplotlib.pyplot as plt
 
 import os
